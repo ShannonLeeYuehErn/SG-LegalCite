@@ -1,8 +1,12 @@
 # SG-LegalCite: A Principle-Augmented Benchmark for Legal Citation Retrieval in Singapore Law
 
-**Paper:** *SG-LegalCite: A Principle-Augmented Benchmark for Legal Citation Retrieval in Singapore Law*
+**Authors:** Lee Yueh Ern Shannon, Kaidong Feng, Yingpeng Du, Lee En Jia Chloe, Zhu Sun\*
 
-**Dataset:** [HuggingFace](https://huggingface.co/datasets/anonymousmeowmeow/SG-LegalCite) | **Paper:** [[arXiv / ACL Anthology link]](#)
+<sub>\*Corresponding Author.</sub>
+
+Published at **AACL-IJCNLP 2026 (Main)**.
+
+**Dataset:** [HuggingFace](https://huggingface.co/datasets/ShannonLeeYuehErn/SG-LegalCite)
 
 ---
 
@@ -59,8 +63,8 @@ SG-LegalCite/
 │   │   ├── longformer_single_stage_v1.py                # Legal-Longformer (principle-augmented)
 │   │   ├── pileoflaw_direct_v1.py                       # Pile-of-Law BERT (fact-only)
 │   │   ├── pileoflaw_single_stage_v2.py                 # Pile-of-Law BERT (principle-augmented)
-│   │   ├── roberta_large_direct_v1.py                   # Legal-English-RoBERTa (fact-only)
-│   │   ├── roberta_large_single_stage_v1.py             # Legal-English-RoBERTa (principle-augmented)
+│   │   ├── roberta_large_direct_v1.py                   # Legal-en-RoBERTa (fact-only)
+│   │   ├── roberta_large_single_stage_v1.py             # Legal-en-RoBERTa (principle-augmented)
 │   │   ├── sailer_direct_v1.py                          # SAILER (fact-only)
 │   │   ├── sailer_single_stage_v1.py                    # SAILER (principle-augmented)
 │   │   ├── adaptllm_direct_v1.py                        # AdaptLLM (fact-only)
@@ -289,7 +293,7 @@ Two query settings are evaluated:
 | Legal-Longformer | 148M |
 | Pile-of-Law BERT | 340M |
 | SAILER | 110M |
-| Legal-English-RoBERTa | 337M |
+| Legal-en-RoBERTa | 337M |
 
 **Large-Scale Legal Language Models**
 
@@ -382,13 +386,13 @@ To test whether principle gains reflect doctrinal modelling rather than richer t
 
 **Source code:** [`code/Cold-Start Evaluation/`](code/Cold-Start%20Evaluation/)
 
-To test whether the paradigm works without the oracle principle, we use DeepSeek-V3 to predict the legal principle from facts alone (case names disallowed; contamination screen applied), then evaluate the same fine-tuned SaulLM-7B on 50 sampled pools.
+To test whether the paradigm works without the oracle principle, we use DeepSeek-V3 to predict the legal principle from facts alone (case names disallowed; contamination screen applied), then evaluate the same fine-tuned SaulLM-7B on 1,000 sampled test pools.
 
 | Setting | MRR | R@1 |
 |---|---|---|
-| Fact-only | 17.1 | 10.0 |
-| Cold-start (predicted principle) | 21.9 (+28%) | 14.0 (+40%) |
-| **Gold (oracle principle)** | **49.5 (+190%)** | **36.0 (+260%)** |
+| Fact-only | 15.7 | 7.5 |
+| Cold-start (predicted principle) | 17.2 (+10%) | 8.6 (+15%) |
+| **Gold (oracle principle)** | **33.6 (+114%)** | **20.8 (+177%)** |
 
 **Key takeaway:** The principle-augmented paradigm provides real benefit even when principles must be predicted from facts alone. The cold-start vs gold gap indicates clear headroom for improvement via fine-tuned principle predictors or lawyer-in-the-loop refinement.
 
@@ -398,7 +402,7 @@ To test whether the paradigm works without the oracle principle, we use DeepSeek
 
 **1. Large-scale legal language models consistently outperform smaller conventional models** across both query settings. A clear performance hierarchy exists: large-scale legal LMs (e.g., SaulLM-7B) achieve the strongest results, followed by conventional pre-trained language models (e.g., SBERT), with BM25 performing weakest. This suggests legal citation retrieval benefits substantially from both model scale and domain-specific pre-training.
 
-**2. Principle-augmented retrieval consistently outperforms fact-only retrieval** across nearly all models and all model categories — including lexical baselines, conventional PLMs, and large-scale legal LMs. On average, principle-augmented queries improve MRR by 111% and Recall by 124% across all approaches, confirming that explicit legal principles provide strong discriminative signals for citation retrieval.
+**2. Principle-augmented retrieval consistently outperforms fact-only retrieval** across nearly all models and all model categories — including lexical baselines, conventional PLMs, and large-scale legal LMs. On average, principle-augmented queries improve MRR by 111% and Recall by 117% across all approaches, confirming that explicit legal principles provide strong discriminative signals for citation retrieval.
 
 **3. Large-scale legal language models benefit more from principle augmentation than conventional models.** On average, our paradigm improves MRR by 79%, 70%, and 184% across the three model categories respectively. The performance gap widens under principle-augmented queries, indicating that stronger models exploit principle-level semantics more effectively. SaulLM-7B achieves the top scores across all metrics after augmentation.
 
@@ -410,7 +414,7 @@ To test whether the paradigm works without the oracle principle, we use DeepSeek
 
 **7. Principles capture doctrinal signal beyond raw citation text (context ablation).** At matched text budget, LLM-extracted principles outperform a scrubbed ±200-word citation window by +15% MRR (SBERT) and +102% MRR (SaulLM-7B), demonstrating that the extraction step adds genuine value.
 
-**8. The paradigm is robust to cold-start deployment.** Without an oracle principle, DeepSeek-V3-predicted principles still yield +28% MRR over fact-only retrieval, showing the paradigm provides real benefit even in realistic lawyer-driven workflows.
+**8. The paradigm is robust to cold-start deployment.** Without an oracle principle, DeepSeek-V3-predicted principles still yield +10% MRR and +15% R@1 over fact-only retrieval, showing the paradigm provides real benefit even in realistic lawyer-driven workflows.
 
 ---
 
@@ -430,10 +434,12 @@ These barriers are noted to highlight reproducibility challenges in legal NLP.
 If you use SG-LegalCite in your work, please cite:
 
 ```bibtex
-@inproceedings{anonymous2026sglegalcite,
-  title  = {SG-LegalCite: A Principle-Augmented Benchmark for Legal Citation Retrieval in Singapore Law},
-  author = {Anonymous Authors},
-  year   = {2026}
+@inproceedings{lee2026sglegalcite,
+  title     = {SG-LegalCite: A Principle-Augmented Benchmark for Legal Citation Retrieval in Singapore Law},
+  author    = {Lee, Yueh Ern Shannon and Feng, Kaidong and Du, Yingpeng and Lee, En Jia Chloe and Sun, Zhu},
+  booktitle = {Proceedings of the 2026 Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics (AACL-IJCNLP)},
+  year      = {2026},
+  note      = {Corresponding author: Zhu Sun}
 }
 ```
 

@@ -6,7 +6,7 @@
 
 Published at **AACL-IJCNLP 2026 (Main)**.
 
-**Dataset:** [HuggingFace](https://huggingface.co/datasets/ShannonLeeYuehErn/SG-LegalCite)
+**Dataset:** [HuggingFace](https://huggingface.co/datasets/ShannonLeeYuehErn/SG-LegalCite) | **Paper:** [[AACL-IJCNLP 2026 Anthology link]](#)
 
 ---
 

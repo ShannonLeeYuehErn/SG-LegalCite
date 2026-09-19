@@ -37,7 +37,7 @@ SG-LegalCite/
 │   │   ├── 00_Generate_Case_Index.py            # Step 0: Generate master case URL index (2000–2025)
 │   │   ├── 01_Extract_Cited_Cases_Batch.py      # Step 1: Extract cited cases + paragraph context
 │   │   ├── 02_Deepseek_Chat_Batch.py            # Step 2: Extract Key Principles, Issue, Issue Group
-│   │   ├── 03_Fact_Query_Batch.py               # Step 3: Generate lawyer-style Fact_Query summaries
+│   │   ├── 03_Fact_Query_Batch.py               # Step 3: Generate lawyer-style Extract of Facts summaries
 │   │   ├── 04_Final_Concatenation_Batch.py      # Step 4: Add Case Name + Precedential Weight
 │   │   ├── Scrape Cited Case Judgements Pipeline.py    # Scrape full judgment text for cited cases
 │   │   ├── prompt_with_paragraphs_FINAL.txt     # 15-shot DeepSeek extraction prompt
@@ -159,7 +159,7 @@ Each record is a triplet **(f, k, c)**:
 - **k** — Legal principle for which the precedent is cited
 - **c** — Cited Singapore Supreme Court case
 
-Each judgment is uniquely identified by `Judgment_URL`, which corresponds 1:1 with the Singapore neutral citation (`Judgment_Reference`) of the citing judgment (e.g., `https://www.elitigation.sg/gd/s/2023_SGCA_15` ↔ `[2023] SGCA 15`).
+Each judgment is uniquely identified by `URL`, which corresponds 1:1 with the Singapore neutral citation (`Full_Reference`) of the citing judgment (e.g., `https://www.elitigation.sg/gd/s/2023_SGCA_15` ↔ `[2023] SGCA 15`).
 
 ### Domain Distribution
 
@@ -182,7 +182,7 @@ The corpus is **not artificially balanced** across domains. SG-LegalCite is inte
 The pipeline consists of three main steps:
 
 **Step 1 — Fact Extraction (`03_Fact_Query_Batch.py`)**
-For each judgment, the factual section is located through rule-based heading detection (prioritising headings such as *Facts*, *Background*, *Introduction*, *Dispute*), with a fallback to the first 15 substantial paragraphs. DeepSeek-V3 (T=0.2, max 512 tokens) compresses the raw factual section (~1,034 tokens) into a 2–3 sentence lawyer-style `Fact_Query` (~45 tokens), a 23× compression.
+For each judgment, the factual section is located through rule-based heading detection (prioritising headings such as *Facts*, *Background*, *Introduction*, *Dispute*), with a fallback to the first 15 substantial paragraphs. DeepSeek-V3 (T=0.2, max 512 tokens) compresses the raw factual section (~1,034 tokens) into a 2–3 sentence lawyer-style `Extract of Facts` (~45 tokens), a 23× compression.
 
 **Step 2 — Citation and Context Extraction (`01_Extract_Cited_Cases_Batch.py`)**
 Playwright + BeautifulSoup extract cited case names and ±5 surrounding paragraphs from eLitigation HTML. Cited case names are identified through styled HTML elements (e.g., `<em>`, `<i>`), validated against Singapore neutral citation patterns. No LLM involvement.

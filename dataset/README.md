@@ -19,8 +19,8 @@ https://huggingface.co/datasets/ShannonLeeYuehErn/SG-LegalCite
 | Time span | 2000–2025 |
 | Courts covered | SGCA, SGCAI, SGHC, SGHCF, SGHCR |
 
-Each judgment is uniquely identified by `Judgment_URL`, which corresponds
-1:1 with the Singapore neutral citation (`Judgment_Reference`) of the citing
+Each judgment is uniquely identified by `URL`, which corresponds
+1:1 with the Singapore neutral citation (`Full_Reference`) of the citing
 judgment (e.g., `https://www.elitigation.sg/gd/s/2023_SGCA_15` ↔ `[2023] SGCA 15`).
 
 ## Files
@@ -34,24 +34,25 @@ judgment (e.g., `https://www.elitigation.sg/gd/s/2023_SGCA_15` ↔ `[2023] SGCA 
 
 ## Fields
 
-The CSV columns, in order:
+The CSV columns, in the order they appear in the file:
 
 | Field | Description |
 |---|---|
-| `Judgment_URL` | URL of the citing judgment on eLitigation |
-| `Judgment_Reference` | Neutral citation of the citing judgment |
 | `Year` | Year of the citing judgment |
 | `Court_Type` | Court type code (SGCA, SGCAI, SGHC, SGHCF, SGHCR) |
 | `Case_Number` | Case number of the citing judgment |
+| `URL` | URL of the citing judgment on eLitigation |
+| `Full_Reference` | Neutral citation of the citing judgment |
 | `Case Name` | Full case name of the citing judgment |
 | `Current Court Level` | Court level of the citing judgment |
-| `Fact_Query` | LLM-summarised factual background (~45 tokens) |
+| `Extract of Facts` | LLM-summarised factual background (~45 tokens) |
 | `Cited Case` | Name of the cited Singapore case |
 | `Paragraph` | Citation paragraph with ±5 surrounding context paragraphs |
 | `Key Principles Illustrated` | Legal principle for which the case is cited |
 | `Issue` | Specific legal issue addressed |
 | `Issue Group` | Fine-grained doctrinal tag (e.g., "Damages", "Contract") |
-| `Precedential Weight` | Precedential status of the cited case: `Binding`, `Comity`, or `Persuasive` |
+| `Court Level` | Court level of the **cited** case |
+| `Precedential Weight (Binding, Comity, or Persuasive)` | Precedential status of the cited case: Binding, Comity, or Persuasive |
 
 ## Loading
 
@@ -64,18 +65,18 @@ df = pd.read_csv("COMBINED_ALL_CASES_FINAL_V2.csv", encoding="latin-1")
 ## Splits
 
 The dataset ships as a single file; splits are created at load time. The
-8:1:1 split is performed at the **judgment level** (by unique `Judgment_URL`)
+8:1:1 split is performed at the **judgment level** (by unique `URL`)
 to prevent leakage: all records from one citing judgment fall in the same
 split. `random_state=42` is used for reproducibility.
 
 ```python
 from sklearn.model_selection import train_test_split
 
-unique_urls           = df["Judgment_URL"].unique()
+unique_urls           = df["URL"].unique()
 train_urls, temp_urls = train_test_split(unique_urls, test_size=0.2, random_state=42)
 val_urls, test_urls   = train_test_split(temp_urls, test_size=0.5, random_state=42)
 
-train_df = df[df["Judgment_URL"].isin(train_urls)]
-val_df   = df[df["Judgment_URL"].isin(val_urls)]
-test_df  = df[df["Judgment_URL"].isin(test_urls)]
+train_df = df[df["URL"].isin(train_urls)]
+val_df   = df[df["URL"].isin(val_urls)]
+test_df  = df[df["URL"].isin(test_urls)]
 ```

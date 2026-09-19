@@ -1,17 +1,17 @@
 # Dataset
 
 SG-LegalCite is a principle-augmented benchmark for legal citation retrieval
-in Singapore law, comprising 100,890 case-principle pairs extracted from
-8,523 Supreme Court judgments spanning 2000-2025.
+in Singapore law, comprising 100,890 case–principle pairs extracted from
+8,523 Supreme Court judgments spanning 2000–2025.
 
 The dataset files are hosted on HuggingFace:
-https://huggingface.co/datasets/anonymousmeowmeow/SG-LegalCite
+https://huggingface.co/datasets/ShannonLeeYuehErn/SG-LegalCite
 
 ## Statistics
 
 | Attribute | Value |
 |---|---|
-| Total case-principle pairs | 100,890 |
+| Total case–principle pairs | 100,890 |
 | Unique citing judgments | 8,523 |
 | Unique cited cases | 48,478 |
 | Unique issues | 86,519 |
@@ -19,59 +19,63 @@ https://huggingface.co/datasets/anonymousmeowmeow/SG-LegalCite
 | Time span | 2000–2025 |
 | Courts covered | SGCA, SGCAI, SGHC, SGHCF, SGHCR |
 
-Each judgment is uniquely identified by its `judgment_url`, which corresponds
-1:1 with the Singapore neutral citation (`Full_Reference`) of the citing
+Each judgment is uniquely identified by `Judgment_URL`, which corresponds
+1:1 with the Singapore neutral citation (`Judgment_Reference`) of the citing
 judgment (e.g., `https://www.elitigation.sg/gd/s/2023_SGCA_15` ↔ `[2023] SGCA 15`).
-
-## Format
-
-Each record is a JSON line with the following fields:
-
-```json
-{
-  "judgment_url": "https://www.elitigation.sg/...",
-  "court": "SGCA",
-  "year": 2023,
-  "fact": "My client was found not yet fit for admission to the Bar...",
-  "principle": "Dishonesty is to be distinguished from a lack of academic diligence.",
-  "cited_case": "Re Suria Shaik Aziz [2023] 5 SLR 1272",
-  "issue": "Whether the stakeholders agree that Mr Foo should be admitted to the Bar.",
-  "issue_group": "Admission of Candidate"
-}
-```
 
 ## Files
 
-| File | Records | Description |
+| File | Size | Description |
 |---|---|---|
-| `train.jsonl` | 79,950 | Training split (80%) |
-| `val.jsonl` | 10,555 | Validation split (10%) |
-| `test.jsonl` | 10,385 | Test split (10%) |
-| `candidate_pool.jsonl` | 48,478 | All unique cited cases |
+| `COMBINED_ALL_CASES_FINAL_V2.csv` | 764 MB | Full dataset — 100,890 case–principle pairs |
+| `stage2_direct_candidate_pools_v2.json` | 132 MB | 1000-way candidate pools for fact-only retrieval |
+| `stage2_single_stage_pools.json` | 144 MB | 1000-way candidate pools for principle-augmented retrieval |
+| `stage2_case_lookup.json` | 3.45 MB | Case ID to case text lookup table |
 
-The 80/10/10 split is performed at the **judgment level** (by unique
-`judgment_url`) to prevent data leakage: all records derived from a single
-citing judgment fall into the same split. The split uses `random_state=42`
-for reproducibility.
+## Fields
+
+The CSV columns, in order:
+
+| Field | Description |
+|---|---|
+| `Judgment_URL` | URL of the citing judgment on eLitigation |
+| `Judgment_Reference` | Neutral citation of the citing judgment |
+| `Year` | Year of the citing judgment |
+| `Court_Type` | Court type code (SGCA, SGCAI, SGHC, SGHCF, SGHCR) |
+| `Case_Number` | Case number of the citing judgment |
+| `Case Name` | Full case name of the citing judgment |
+| `Current Court Level` | Court level of the citing judgment |
+| `Fact_Query` | LLM-summarised factual background (~45 tokens) |
+| `Cited Case` | Name of the cited Singapore case |
+| `Paragraph` | Citation paragraph with ±5 surrounding context paragraphs |
+| `Key Principles Illustrated` | Legal principle for which the case is cited |
+| `Issue` | Specific legal issue addressed |
+| `Issue Group` | Fine-grained doctrinal tag (e.g., "Damages", "Contract") |
+| `Precedential Weight` | Precedential status of the cited case: `Binding`, `Comity`, or `Persuasive` |
 
 ## Loading
 
 ```python
-from datasets import load_dataset
-ds = load_dataset("anonymousmeowmeow/SG-LegalCite")
+import pandas as pd
+
+df = pd.read_csv("COMBINED_ALL_CASES_FINAL_V2.csv", encoding="latin-1")
 ```
 
-Or load JSONL files directly:
+## Splits
+
+The dataset ships as a single file; splits are created at load time. The
+8:1:1 split is performed at the **judgment level** (by unique `Judgment_URL`)
+to prevent leakage: all records from one citing judgment fall in the same
+split. `random_state=42` is used for reproducibility.
 
 ```python
-import json
+from sklearn.model_selection import train_test_split
 
-def load_split(path):
-    with open(path) as f:
-        return [json.loads(line) for line in f]
+unique_urls           = df["Judgment_URL"].unique()
+train_urls, temp_urls = train_test_split(unique_urls, test_size=0.2, random_state=42)
+val_urls, test_urls   = train_test_split(temp_urls, test_size=0.5, random_state=42)
 
-train = load_split('train.jsonl')
-val   = load_split('val.jsonl')
-test  = load_split('test.jsonl')
-pool  = load_split('candidate_pool.jsonl')
+train_df = df[df["Judgment_URL"].isin(train_urls)]
+val_df   = df[df["Judgment_URL"].isin(val_urls)]
+test_df  = df[df["Judgment_URL"].isin(test_urls)]
 ```

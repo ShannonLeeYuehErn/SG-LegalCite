@@ -257,11 +257,16 @@ df_clean['query'] = '[FACT] ' + df_clean['fact'].astype(str) + \
 # Split by URL — identical to all other models
 unique_urls = df_clean['url'].unique()
 n           = len(unique_urls)
-np.random.seed(42)
-shuffled    = np.random.permutation(unique_urls)
-train_urls  = set(shuffled[:int(0.8*n)])
-val_urls    = set(shuffled[int(0.8*n):int(0.9*n)])
-test_urls   = set(shuffled[int(0.9*n):])
+# Split with sklearn.train_test_split(random_state=42) — the SAME procedure as the pool builders
+# (generate_stage2_*_pools*.py) and the encoder baselines. The previous np.random.permutation +
+# first-80% slicing used the same seed but the opposite end of the shuffle, so the sklearn test
+# judgments (i.e. the pool file) ended up inside this script's training set.
+from sklearn.model_selection import train_test_split
+_train_urls, _temp_urls = train_test_split(unique_urls, test_size=0.2, random_state=42)
+_val_urls,   _test_urls = train_test_split(_temp_urls,  test_size=0.5, random_state=42)
+train_urls  = set(_train_urls)
+val_urls    = set(_val_urls)
+test_urls   = set(_test_urls)
 
 train_df = df_clean[df_clean['url'].isin(train_urls)].reset_index(drop=True)
 val_df   = df_clean[df_clean['url'].isin(val_urls)].reset_index(drop=True)
@@ -270,6 +275,13 @@ test_df  = df_clean[df_clean['url'].isin(test_urls)].reset_index(drop=True)
 assert len(set(train_df['url']) & set(val_df['url']))  == 0, "Train/Val URL leakage!"
 assert len(set(train_df['url']) & set(test_df['url'])) == 0, "Train/Test URL leakage!"
 assert len(set(val_df['url'])   & set(test_df['url'])) == 0, "Val/Test URL leakage!"
+# Guard against the pool file itself: no test-pool fact may appear in the training rows.
+with open(POOL_PATH, 'r') as _f: _pools_chk = json.load(_f)
+_train_facts = set(train_df['fact'])
+_leak = sum(1 for _p in _pools_chk.values() if _p.get('fact_text') in _train_facts)
+assert _leak == 0, f"LEAK: {_leak} test-pool facts found in training rows"
+print(f"✓ 0 / {len(_pools_chk)} test-pool facts appear in the training rows")
+del _pools_chk, _train_facts
 print(f"✓ No URL leakage | Train: {len(train_df)} | Val: {len(val_df)} | Test: {len(test_df)}")
 
 # ============================================================================

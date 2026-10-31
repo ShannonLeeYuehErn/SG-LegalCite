@@ -137,10 +137,7 @@ df_clean['query'] = '[FACT] ' + df_clean['fact'].astype(str) + \
 # Split by URL — identical to all other models
 unique_urls  = df_clean['url'].unique()
 n            = len(unique_urls)
-# Split with sklearn.train_test_split(random_state=42) — the SAME procedure as the pool builders
-# (generate_stage2_*_pools*.py) and the encoder baselines. The previous np.random.permutation +
-# first-80% slicing used the same seed but the opposite end of the shuffle, so the sklearn test
-# judgments (i.e. the pool file) ended up inside this script's training set.
+# Split with sklearn.train_test_split(random_state=42) — the SAME procedure as the pool builders and the encoder baselines.
 from sklearn.model_selection import train_test_split
 _train_urls, _temp_urls = train_test_split(unique_urls, test_size=0.2, random_state=42)
 _val_urls,   _test_urls = train_test_split(_temp_urls,  test_size=0.5, random_state=42)
